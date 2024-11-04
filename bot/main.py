@@ -5,9 +5,9 @@ from modules import test
 from modules import auto_message as auto_m
 from configparser import ConfigParser
 cfg = ConfigParser()
-cfg.read('bot/config.cfg')
+#cfg.read('bot/config.cfg')
 
-bot = AsyncTeleBot(cfg.get('Default', 'bot_token'))
+bot = AsyncTeleBot('token')
 
 @bot.message_handler(commands=['start'])
 async def send_welcome(message: tb.types.Message):
