@@ -1,28 +1,29 @@
 from telebot.types import *
 from telebot.async_telebot import AsyncTeleBot
-import aioschedule 
 import asyncio
 import time
+import threading
+t = time.localtime()
 
 
 
     
     
-async def job(bot: AsyncTeleBot, text: str, chat_id: int):
+async def message(bot: AsyncTeleBot, text: str, chat_id: int):
     markup = InlineKeyboardMarkup()
     markup.add(InlineKeyboardButton('Yes',callback_data='Yes'))
     markup.add(InlineKeyboardButton('No', callback_data='No'))
     await bot.send_message(chat_id, text, reply_markup=markup)
-    #asyncio.sleep(1)
+    
 
 
 
-async def auto_message(bot: AsyncTeleBot):
-    aioschedule.every(10).seconds.do(job, bot = bot, text='ndw', chat_id = 1217602016) #message(bot, 'ndw', 1217602016)
+async def auto_message():
+    #tread = Thread().run()
     #loop = asyncio.get_event_loop()
     while True:
-    
-        await aioschedule.run_pending()
+        print(time.strftime("%H:%M", t))
+        
         await asyncio.sleep(1)
 
 
