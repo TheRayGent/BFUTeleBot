@@ -1,40 +1,32 @@
 import asyncio
-import telebot as tb
-from telebot.async_telebot import AsyncTeleBot
-from modules import test
-#from modules import auto_message as auto_m
+import aiogram
+from aiogram import Bot, Dispatcher
+from modules import test, auto_message
+
 from configparser import ConfigParser
 cfg = ConfigParser()
+
 cfg.read('bot/config.cfg')
 
-from background import keep_alive
+dp = Dispatcher()
+bot = Bot(token=cfg.get('Default', 'bot_token'))
 
-bot = AsyncTeleBot(cfg.get('Default', 'bot_token'))
+async def automessage(bot: Bot, chat_id: int, text: str):
+    print('1')
+    await bot.send_message(chat_id=chat_id, text=text)
 
-@bot.message_handler(commands=['start'])
-async def send_welcome(message: tb.types.Message):
-    await bot.send_message(message.chat.id, await bot.get_me())
-
-async def main():
+@dp.startup()
+async def startup(bot: Bot):
     print(f'{(await bot.get_my_name()).name} is running!')
-    await bot.polling()
 
+async def main() -> None:
+    dp.include_routers(
+        #test.rt,
+        auto_message.rt
+    )
+    auto_message.sched(bot)
+    await bot.delete_webhook(drop_pending_updates=True)
+    await dp.start_polling(bot)
 
-    
-
-
-test.init_bot(bot)
-
-
-if __name__ == '__main__':
-    #threading.Thread(target=asyncio.run(main())).start()
-    keep_alive(bot)
+if __name__ == "__main__":
     asyncio.run(main())
-    #auto_m.auto_message()
-    
-    
-    
-    
-    
-    
-    

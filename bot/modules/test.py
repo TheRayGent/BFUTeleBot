@@ -1,12 +1,11 @@
-from telebot.types import *
-from telebot.async_telebot import AsyncTeleBot
+import asyncio
+import aiogram
+from aiogram import Bot, Router,filters
+from aiogram import types as type
 
+rt = Router()
 
-
-
-
-def init_bot(bot: AsyncTeleBot):
-    @bot.message_handler(commands=['test'])
-    async def test(message: Message):
-        await bot.send_message(message.chat.id, text=message.chat.id)
+@rt.message(filters.Command('test'))
+async def test(message: type.Message):
+    await message.answer("Hello!")
     
