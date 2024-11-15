@@ -1,7 +1,6 @@
 import asyncio
 from aiogram import Bot, filters, Router, F
 from aiogram import types as type
-from magic_filter import MagicFilter
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from ujson import loads as jsonloads
 import datetime
@@ -31,10 +30,10 @@ sheddict = dict(sheddict)
 async def message(bot: Bot, chat_id: int, lesson: str):
     weekday = str(datetime.datetime.today().astimezone(tz= tz).isoweekday())
 
-    '''try:
+    try:
         text = sheddict[upweek][weekday][lesson]
     except:
-        return'''
+        return
     
 
     markup = type.InlineKeyboardMarkup(
@@ -46,22 +45,24 @@ async def message(bot: Bot, chat_id: int, lesson: str):
         ]
     )
 
-    await bot.send_message(chat_id=chat_id, text='textdwqwqdqwd', reply_markup=markup)
+    await bot.send_message(chat_id=chat_id, text=text, reply_markup=markup)
 
 
 
 def sched(bot: Bot):
     scheduler = AsyncIOScheduler(timezone="Europe/Kaliningrad")
-    chat_id = 1217602016
+    chat_id = cfg.get('Default', 'chat_id')
     global attendance_file, today_date_file
     today_date_file = f'modules/attendance/{datetime.datetime.today().astimezone(tz= tz).date().day}.{datetime.datetime.today().astimezone(tz= tz).date().month}.txt'
     attendance_file = open(path.join(path.dirname(argv[0]), today_date_file), mode='a', encoding='utf-8')
     
 
-    #for i in sheddict.get('time'):
-        #time = str(sheddict['time'][i]).split(':')
-        #scheduler.add_job(message, trigger='cron', hour=time[0], minute=time[1], kwargs={'bot': bot, 'chat_id': chat_id, 'lesson': str(i)}, id=str(i))
-    #print(scheduler.get_jobs())
+    for i in sheddict.get('time'):
+        time = str(sheddict['time'][i]).split(':')
+        scheduler.add_job(message, trigger='cron', hour=time[0], minute=time[1], kwargs={'bot': bot, 'chat_id': chat_id, 'lesson': str(i)}, id=str(i))
+    
+    scheduler.add_job(upweek_edit, trigger='cron', hour='0')
+    print(scheduler.get_jobs())
     
     #scheduler.add_job(message, trigger='interval', seconds = 5, kwargs={'bot': bot, 'chat_id': chat_id, 'lesson': '1'}, id='1')
 
@@ -72,46 +73,32 @@ def edit_file(text: str):
     attendance_file.write(text)
     attendance_file.close
     attendance_file = open(path.join(path.dirname(argv[0]), today_date_file), mode='a', encoding='utf-8')
+    print(text[:-1])
     
 
+async def upweek_edit():
+    global upweek
+    upweek = 'upweek 'if upweek != 'upweek' else 'downweek'
+    cfg.set('Default', 'upweek', upweek)
+    with open(config, 'w') as config_file:
+        cfg.write(config_file)
+    print(f'upweek = {upweek}')
+
 @rt.message(filters.Command('upweek'))
-async def upweek_command(message: type.Message):
-    global upweek
-    upweek = 'upweek'
-    cfg.set('Default', 'upweek', upweek)
-    with open(config, 'w') as config_file:
-        cfg.write(config_file)
+async def upweek_command(message: type.Message = None):
+    await upweek_edit()
 
-@rt.message(filters.Command('downweek'))
-async def downweek_command(message: type.Message):
-    global upweek
-    upweek = 'downweek'
-    cfg.set('Default', 'upweek', upweek)
-    with open(config, 'w') as config_file:
-        cfg.write(config_file)
-
+    
 
 
 @rt.callback_query(F.data == '1')
-async def shudl_callback(callback: type.CallbackQuery):
-    text = f'{callback.message.date.astimezone(tz= tz).day}.{callback.message.date.astimezone(tz= tz).month}_{callback.message.text} = {callback.from_user.id}_{callback.data}\n'
-    
-    edit_file(text)
-    await callback.message.answer(f'{callback.message.date.astimezone(tz= tz)}')
-
 @rt.callback_query(F.data == '2')
-async def shudl_callback(callback: type.CallbackQuery):
-    text = f'{callback.message.date.astimezone(tz= tz).day}.{callback.message.date.astimezone(tz= tz).month}_{callback.message.text} = {callback.from_user.id}_{callback.data}\n'
-    
-    edit_file(text)
-    await callback.message.answer(f'{callback.message.date.astimezone(tz= tz)}')
-
 @rt.callback_query(F.data == '3')
 async def shudl_callback(callback: type.CallbackQuery):
     text = f'{callback.message.date.astimezone(tz= tz).day}.{callback.message.date.astimezone(tz= tz).month}_{callback.message.text}_{callback.from_user.id} = {callback.data}\n'
-    
     edit_file(text)
-    await callback.message.answer(f'{callback.message.date.astimezone(tz= tz)}')
+    #await callback.message.answer(f'{callback.message.date.astimezone(tz= tz)}')
+
 
 
 
