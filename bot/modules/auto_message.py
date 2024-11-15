@@ -30,13 +30,18 @@ sheddict = dict(sheddict)
 
 async def message(bot: Bot, chat_id: int, lesson: str):
     weekday = str(datetime.datetime.today().astimezone(tz= tz).isoweekday())
-    #text = sheddict[upweek][weekday][lesson]
+
+    '''try:
+        text = sheddict[upweek][weekday][lesson]
+    except:
+        return'''
+    
 
     markup = type.InlineKeyboardMarkup(
         inline_keyboard=[
-            [type.InlineKeyboardButton(text='\U00002705', callback_data='x3'),
-             type.InlineKeyboardButton(text='\U0000274E', callback_data='x3'),
-             type.InlineKeyboardButton(text='\U0001F637', callback_data='x3')
+            [type.InlineKeyboardButton(text='\U00002705', callback_data='1'),
+             type.InlineKeyboardButton(text='\U0000274E', callback_data='2'),
+             type.InlineKeyboardButton(text='\U0001F637', callback_data='3')
             ]
         ]
     )
@@ -87,9 +92,23 @@ async def downweek_command(message: type.Message):
 
 
 
-@rt.callback_query(F.data == 'x3')
+@rt.callback_query(F.data == '1')
 async def shudl_callback(callback: type.CallbackQuery):
-    text = f'{callback.message.date.astimezone(tz= tz).day}.{callback.message.date.astimezone(tz= tz).month}_{callback.message.text} = {callback.from_user.id}\n'
+    text = f'{callback.message.date.astimezone(tz= tz).day}.{callback.message.date.astimezone(tz= tz).month}_{callback.message.text} = {callback.from_user.id}_{callback.data}\n'
+    
+    edit_file(text)
+    await callback.message.answer(f'{callback.message.date.astimezone(tz= tz)}')
+
+@rt.callback_query(F.data == '2')
+async def shudl_callback(callback: type.CallbackQuery):
+    text = f'{callback.message.date.astimezone(tz= tz).day}.{callback.message.date.astimezone(tz= tz).month}_{callback.message.text} = {callback.from_user.id}_{callback.data}\n'
+    
+    edit_file(text)
+    await callback.message.answer(f'{callback.message.date.astimezone(tz= tz)}')
+
+@rt.callback_query(F.data == '3')
+async def shudl_callback(callback: type.CallbackQuery):
+    text = f'{callback.message.date.astimezone(tz= tz).day}.{callback.message.date.astimezone(tz= tz).month}_{callback.message.text}_{callback.from_user.id} = {callback.data}\n'
     
     edit_file(text)
     await callback.message.answer(f'{callback.message.date.astimezone(tz= tz)}')
