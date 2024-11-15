@@ -89,7 +89,7 @@ async def downweek_command(message: type.Message):
 
 @rt.callback_query(F.data == 'x3')
 async def shudl_callback(callback: type.CallbackQuery):
-    text = f'{callback.message.date.astimezone(tz= tz).day}.{callback.message.date.astimezone(tz= tz).month}_{callback.message.text} = {callback.from_user.id}'
+    text = f'{callback.message.date.astimezone(tz= tz).day}.{callback.message.date.astimezone(tz= tz).month}_{callback.message.text} = {callback.from_user.id}\n'
     
     edit_file(text)
     await callback.message.answer(f'{callback.message.date.astimezone(tz= tz)}')
