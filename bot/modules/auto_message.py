@@ -1,4 +1,3 @@
-import asyncio
 from aiogram import Bot, filters, Router, F
 from aiogram import types as type
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
@@ -16,9 +15,11 @@ rt = Router()
 from os import path
 from sys import argv
 
-json_file = 'schedul.json' if __name__ == '__main__' else 'modules\\schedul.json'
+json_file = 'schedul.json' if __name__ == '__main__' else 'modules/schedul.json'
 
 upweek = str(cfg.get('Default', 'upweek'))
+admin_list = cfg.get('Default', 'admin_list').split(',')
+
 
 with open(path.join(path.dirname(argv[0]), json_file), 'r', encoding='utf-8') as f:
     json_data = f.read()
@@ -27,15 +28,12 @@ sheddict = dict(sheddict)
 
 
 
-async def message(bot: Bot, chat_id: int, lesson: str):
+async def message(bot: Bot, chat_id: int, lesson: str, thread_id: int):
     weekday = str(datetime.datetime.today().astimezone(tz= tz).isoweekday())
-
     try:
         text = sheddict[upweek][weekday][lesson]
     except:
         return
-    
-
     markup = type.InlineKeyboardMarkup(
         inline_keyboard=[
             [type.InlineKeyboardButton(text='\U00002705', callback_data='1'),
@@ -44,14 +42,18 @@ async def message(bot: Bot, chat_id: int, lesson: str):
             ]
         ]
     )
+    await bot.send_message(chat_id=chat_id, text=text, reply_markup=markup, message_thread_id=thread_id)
 
-    await bot.send_message(chat_id=chat_id, text=text, reply_markup=markup)
-
-
+async def notificate():
+    time = f'{datetime.datetime.now().astimezone(tz=tz).hour}:{datetime.datetime.now().astimezone(tz=tz).minute}'
+    cfg.set('Default', 'last_ping', time)
+    with open(config, 'w') as config_file:
+        cfg.write(config_file)
 
 def sched(bot: Bot):
     scheduler = AsyncIOScheduler(timezone="Europe/Kaliningrad")
     chat_id = cfg.get('Default', 'chat_id')
+    thread_id = cfg.get('Default', 'thread_id')
     global attendance_file, today_date_file
     today_date_file = f'modules/attendance/{datetime.datetime.today().astimezone(tz= tz).date().day}.{datetime.datetime.today().astimezone(tz= tz).date().month}.txt'
     attendance_file = open(path.join(path.dirname(argv[0]), today_date_file), mode='a', encoding='utf-8')
@@ -59,14 +61,14 @@ def sched(bot: Bot):
 
     for i in sheddict.get('time'):
         time = str(sheddict['time'][i]).split(':')
-        scheduler.add_job(message, trigger='cron', hour=time[0], minute=time[1], kwargs={'bot': bot, 'chat_id': chat_id, 'lesson': str(i)}, id=str(i))
+        scheduler.add_job(message, trigger='cron', hour=time[0], minute=time[1], kwargs={'bot': bot, 'chat_id': chat_id, 'lesson': str(i), 'thread_id': thread_id}, id=str(i))
     
-    scheduler.add_job(upweek_edit, trigger='cron', hour='0')
+    #scheduler.add_job(upweek_edit, trigger='cron', hour='0')
+    #scheduler.add_job(notificate, trigger='interval', minutes=1)
     print(scheduler.get_jobs())
-    
-    #scheduler.add_job(message, trigger='interval', seconds = 5, kwargs={'bot': bot, 'chat_id': chat_id, 'lesson': '1'}, id='1')
 
     scheduler.start()
+
 
 def edit_file(text: str):
     global attendance_file, today_date_file
@@ -78,15 +80,20 @@ def edit_file(text: str):
 
 async def upweek_edit():
     global upweek
-    upweek = 'upweek 'if upweek != 'upweek' else 'downweek'
+    upweek = 'upweek' if upweek != 'upweek' else 'downweek'
     cfg.set('Default', 'upweek', upweek)
     with open(config, 'w') as config_file:
         cfg.write(config_file)
-    print(f'upweek = {upweek}')
+    print(f'upweek = "{upweek}"')
 
 @rt.message(filters.Command('upweek'))
 async def upweek_command(message: type.Message = None):
-    await upweek_edit()
+    if str(message.from_user.id) in admin_list:
+        await upweek_edit()
+        if upweek=='upweek': text = 'Неделя теперь верхняя!'
+        else: text = 'Неделя теперь нижняя!'
+        await message.answer(text)
+    else: await message.answer('У вас нет прав для этой команды!')
 
     
 

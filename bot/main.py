@@ -1,13 +1,14 @@
 import asyncio
-import aiogram
 from aiogram import Bot, Dispatcher
-from modules import test, auto_message
+from modules import auto_message, commands
 
 from configparser import ConfigParser
 cfg = ConfigParser()
 
 cfg.read('bot/config.cfg')
 
+#from aiogram.client.session.aiohttp import AiohttpSession
+#session = AiohttpSession(proxy='http://proxy.server:3128')
 dp = Dispatcher()
 bot = Bot(token=cfg.get('Default', 'bot_token'))
 
@@ -20,8 +21,9 @@ async def startup(bot: Bot):
     print(f'{(await bot.get_my_name()).name} is running!')
 
 async def main() -> None:
+    
     dp.include_routers(
-        #test.rt,
+        commands.rt,
         auto_message.rt
     )
     auto_message.sched(bot)

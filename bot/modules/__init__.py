@@ -1,1 +1,1 @@
-from . import auto_message, test
+from . import auto_message, commands, gtls
