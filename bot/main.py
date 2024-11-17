@@ -12,10 +12,6 @@ cfg.read('bot/config.cfg')
 dp = Dispatcher()
 bot = Bot(token=cfg.get('Default', 'bot_token'))
 
-async def automessage(bot: Bot, chat_id: int, text: str):
-    print('1')
-    await bot.send_message(chat_id=chat_id, text=text)
-
 @dp.startup()
 async def startup(bot: Bot):
     print(f'{(await bot.get_my_name()).name} is running!')
