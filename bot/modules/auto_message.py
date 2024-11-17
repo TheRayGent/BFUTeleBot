@@ -46,7 +46,9 @@ async def message(bot: Bot, chat_id: int, lesson: str, thread_id: int):
     )
     await bot.send_message(chat_id=chat_id, text=text, reply_markup=markup, message_thread_id=thread_id)
 
-async def rezerv(bot: Bot):
+async def rezerv(bot: Bot, auto: bool = False):
+    if auto: 
+        if 8 > datetime.datetime.now().astimezone(tz=tz).hour > 20: return
     with zipfile.ZipFile('rezerv.zip', mode='w') as zip_file:
         zip_file.write('bot/modules/attendance')
         for i in listdir('bot/modules/attendance'):
@@ -73,7 +75,7 @@ def sched(bot: Bot):
         scheduler.add_job(message, trigger='cron', hour=time[0], minute=time[1], kwargs={'bot': bot, 'chat_id': chat_id, 'lesson': str(i), 'thread_id': thread_id}, id=str(i))
     
     #scheduler.add_job(upweek_edit, trigger='cron', hour='0')
-    scheduler.add_job(rezerv, trigger='interval', minutes=60, kwargs={'bot': bot})
+    scheduler.add_job(rezerv, trigger='interval', hours = 2, kwargs={'bot': bot, 'auto': True})
     print(scheduler.get_jobs())
 
     scheduler.start()
