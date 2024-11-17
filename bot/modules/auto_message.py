@@ -9,10 +9,12 @@ from configparser import ConfigParser
 cfg = ConfigParser()
 config = 'bot/config.cfg'
 cfg.read(config)
+import zipfile
 
 rt = Router()
 
 from os import path
+from os import listdir
 from sys import argv
 
 json_file = 'schedul.json' if __name__ == '__main__' else 'modules/schedul.json'
@@ -44,6 +46,13 @@ async def message(bot: Bot, chat_id: int, lesson: str, thread_id: int):
     )
     await bot.send_message(chat_id=chat_id, text=text, reply_markup=markup, message_thread_id=thread_id)
 
+async def rezerv(bot: Bot):
+    with zipfile.ZipFile('rezerv.zip', mode='w') as zip_file:
+        zip_file.write('bot/modules/attendance')
+        for i in listdir('bot/modules/attendance'):
+            zip_file.write(f'bot/modules/attendance/{i}')
+    await bot.send_document(1217602016, document=type.FSInputFile('rezerv.zip'))
+
 async def notificate():
     time = f'{datetime.datetime.now().astimezone(tz=tz).hour}:{datetime.datetime.now().astimezone(tz=tz).minute}'
     cfg.set('Default', 'last_ping', time)
@@ -64,7 +73,7 @@ def sched(bot: Bot):
         scheduler.add_job(message, trigger='cron', hour=time[0], minute=time[1], kwargs={'bot': bot, 'chat_id': chat_id, 'lesson': str(i), 'thread_id': thread_id}, id=str(i))
     
     #scheduler.add_job(upweek_edit, trigger='cron', hour='0')
-    #scheduler.add_job(notificate, trigger='interval', minutes=1)
+    scheduler.add_job(rezerv, trigger='interval', minutes=60, kwargs={'bot': bot})
     print(scheduler.get_jobs())
 
     scheduler.start()
@@ -95,8 +104,9 @@ async def upweek_command(message: type.Message = None):
         await message.answer(text)
     else: await message.answer('У вас нет прав для этой команды!')
 
-    
-
+@rt.message(filters.Command('rezerv'))
+async def rezerv_command(message: type.Message, bot: Bot):
+    await rezerv(bot)
 
 @rt.callback_query(F.data == '1')
 @rt.callback_query(F.data == '2')

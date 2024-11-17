@@ -32,6 +32,15 @@ async def user_id(message: type.Message):
     #await message.answer(f'{message.from_user.id}')
     print(f'{message.from_user.id} = {message.from_user.username}')
 
+@rt.message(filters.Command('getuser'))
+async def get_user(message: type.Message, command: filters.CommandObject, bot: Bot):
+    if str(message.from_user.id) in admin_list:
+        user = str(command.args)
+        if user !='None':
+            user = (await bot.get_chat(int(user))).username
+            await message.answer(f'@{user}')
+    else: await message.answer('У вас нет прав для этой команды!')
+
 @rt.message(filters.Command('getlist'))
 async def attendance_list(message: type.Message, bot: Bot, command: filters.CommandObject):
     if str(message.from_user.id) in admin_list:
